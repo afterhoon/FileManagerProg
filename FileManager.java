@@ -3,7 +3,7 @@
 
 	1. 이미지가 많을 경우 불러오는 시간으로 인해 오래걸림
 	2. 실행하고자 하는 파일의 상위 디렉토리 및 파일명에는 띄어쓰기가 없어야 함
-
+	3. 각종 루트 다 지정 필요함
 
 
  ****************************************************************/
@@ -31,6 +31,8 @@ public class FileManager extends JFrame {
 	Vector<FileInfo> vImage;
 	Vector<FileInfo> vDocum;
 	Vector<FileInfo> vAudio;
+	Vector<FileInfo> vEtc;
+	Vector<FileInfo> vCurr;
 	Vector<MediaPanel> vFilePan;
 	Vector<JLabel> vIfLab;
 	FileInfo targetFile;
@@ -40,8 +42,8 @@ public class FileManager extends JFrame {
 
 	//	int viewWid = 3;
 	//	int viewHei = 4;
-	int viewWid = 1;
-	int viewHei = 5;
+	int viewWid = 5;
+	int viewHei = 4;
 	int viewCnt = 0;
 	int page = 1;
 
@@ -50,6 +52,7 @@ public class FileManager extends JFrame {
 	String photoViewer = "mspaint.exe";
 	String documentViewer = "notepad.exe";
 	String musicPlayer = "F:\\Program Files (x86)\\Windows Media Player\\wmplayer.exe";
+	static String thumbnailRoot = "G:\\Users\\fkwls\\Desktop\\thumbnail\\thumb_"; // 맨 뒤에 파일명 머리글 추가
 
 	String pattern = "";
 
@@ -76,7 +79,9 @@ public class FileManager extends JFrame {
 		vImage = new Vector<FileInfo>();
 		vDocum = new Vector<FileInfo>();
 		vAudio = new Vector<FileInfo>();
-
+		vEtc = new Vector<FileInfo>();
+		vCurr = new Vector<FileInfo>();
+		
 		vFilePan = new Vector<MediaPanel>();
 		vIfLab = new Vector<JLabel>();
 
@@ -117,19 +122,35 @@ public class FileManager extends JFrame {
 
 		/* 파일 포맷 버튼 */
 		String formatStr[] = {"전체", "이미지", "문서", "오디오", "기타"};
+		char typeStr[] = {'a', 'i', 'd', 'a', 'x'};
 		JButton formatBtn[] = new JButton[formatStr.length];
 		for(int i = 0 ; i < formatBtn.length ; i++) {
 			formatBtn[i] = new JButton(formatStr[i]);
 			formatBtn[i].setSize(150, 47);
 			formatBtn[i].setLocation(12, 72 + 57*i);
 			contentPane.add(formatBtn[i]);
+			formatBtn[i].addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					JButton b = (JButton)e.getSource();
+					String format = b.getText();
+					if(format == formatStr[0]) vCurr = vFile;
+					else if(format == formatStr[1]) vCurr = vImage;
+					else if(format == formatStr[2]) vCurr = vDocum;
+					else if(format == formatStr[3]) vCurr = vAudio;
+					else if(format == formatStr[4]) vCurr = vEtc;
+				}
+			});
 		}
 		formatBtn[0].addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("vFile.size(): " + vFile.size());
-				System.out.println("vFileBtn.size(): " + vFilePan.size());
-				System.out.println("viewCnt: " + viewCnt);
-				System.out.println("page: " + page);
+				System.out.print("vFile");
+				pageInfo(vFile);
+				System.out.print("vImage");
+				pageInfo(vImage);
+				System.out.print("vDocum");
+				pageInfo(vDocum);
+				System.out.print("vAudio");
+				pageInfo(vAudio);
 			}
 		});
 		formatBtn[1].addActionListener(new ActionListener() {
@@ -278,6 +299,7 @@ public class FileManager extends JFrame {
 
 	class FileInfo {		
 		String address;
+		String thumbIMG;
 		String fileName;
 		String date;
 		int fileSize;
@@ -337,6 +359,10 @@ public class FileManager extends JFrame {
 		public void setAddr(String addr) {
 			address = addr;
 		}
+		
+		public void setThumbIMG(String thumb) {
+			thumbIMG = thumb;
+		}
 
 		public void setDate(String dt) {
 			date = dt;
@@ -360,6 +386,10 @@ public class FileManager extends JFrame {
 
 		public String getAddr() {
 			return address;
+		}
+		
+		public String getThumbIMG() {
+			return thumbIMG;
 		}
 
 		public String getDate() {
@@ -418,8 +448,17 @@ public class FileManager extends JFrame {
 			}
 
 			File selectedFile = chooser.getSelectedFile();
-			vFile.addElement(new FileInfo(selectedFile));
-			//			(new FileInfo(selectedFile)).showFileInfo();
+			FileInfo selInfo = new FileInfo(selectedFile);
+			if(selInfo.getType()=='i')
+				selInfo.setThumbIMG(createImageThumbnail(selInfo.getAddr(),selInfo.getFileName()));
+			vFile.addElement(selInfo);
+			
+			switch(selInfo.getType()) {
+			case 'i': vImage.addElement(selInfo); break;
+			case 'd': vDocum.addElement(selInfo); break;
+			case 'a': vAudio.addElement(selInfo); break;
+			case 'x': vEtc.addElement(selInfo); break;
+			}
 
 			fileIO();
 			refresh(pan[0]);
@@ -463,7 +502,7 @@ public class FileManager extends JFrame {
 
 			try{
 				fin = new FileInputStream(targetFile.getAddr());
-				fout = new FileOutputStream(downloadRoot + targetFile.getFileName());//확장명 jpg는 바꾸면 안됨
+				fout = new FileOutputStream(downloadRoot + targetFile.getFileName()); //확장명 jpg는 바꾸면 안됨
 				while(true) {
 					data = fin.read();
 					if( data == -1) break;
@@ -545,13 +584,8 @@ public class FileManager extends JFrame {
 		public void setMediaPanel(int num) {
 			switch(vFile.elementAt(num + (page-1)*viewWid*viewHei).type) {
 			case 'i':
-//				createImageThumbnail(vFile.elementAt(num + (page-1)*viewWid*viewHei).getAddr(),
-//						vFile.elementAt(num + (page-1)*viewWid*viewHei).getFileName());
-				imageIcon = new ImageIcon(vFile.elementAt(num + (page-1)*viewWid*viewHei).getAddr()); // load the image to a imageIcon
-				image = imageIcon.getImage(); // transform it
-				newimg = image.getScaledInstance(120, 120,  java.awt.Image.SCALE_SMOOTH); // scale it the smooth way 
-				imageIcon = new ImageIcon(newimg);
-				mBtn.setImage(imageIcon, vFile.elementAt(num));
+				imageIcon = new ImageIcon(vFile.elementAt(num + (page-1)*viewWid*viewHei).getThumbIMG());
+				mBtn.setImage(imageIcon, vFile.elementAt(num + (page-1)*viewWid*viewHei));
 				break;
 			case 'd': 
 				mBtn.setDocum(vFile.elementAt(num + (page-1)*viewWid*viewHei));
@@ -669,6 +703,16 @@ public class FileManager extends JFrame {
 		}
 
 	}
+	
+	void pageInfo(Vector<FileInfo> v) {
+		System.out.println("---------------------------------------\n");
+		System.out.println("vector size(): " + v.size());
+		System.out.println("vFileBtn size(): " + vFilePan.size());
+		System.out.println("viewCnt: " + viewCnt);
+		System.out.println("page: " + page);
+		System.out.println("---------------------------------------\n");
+	}
+	
 
 	/**
 	 * 이미지 섬네일 생성(기본 사이즈:150×150)
@@ -676,33 +720,32 @@ public class FileManager extends JFrame {
 	 * @param srcFileNm 원본 파일 명
 	 * @return
 	 */
-	public static boolean createImageThumbnail(String srcPath, String srcFileNm) {
+	public static String createImageThumbnail(String srcPath, String srcFileNm) {
 		return createImageThumbnail(srcPath, srcFileNm, 150, 150);
 	}
 	
-	public static boolean createImageThumbnail(String srcPath, String srcFileNm, int width, int height) {
-
+	public static String createImageThumbnail(String srcPath, String srcFileNm, int width, int height) {
+		String destPath = null;
 		if( srcPath==null || srcFileNm==null ) {
-			return false;
+			return "";
 		}
 
 		try {
-			BufferedImage buffImage = ImageIO.read(new File(srcPath+srcFileNm));
+			BufferedImage buffImage = ImageIO.read(new File(srcPath));
 
 			ResampleOp resampleOp = new ResampleOp(width, height);
 			resampleOp.setUnsharpenMask( AdvancedResizeOp.UnsharpenMask.Soft );
 			BufferedImage rescaledImage = resampleOp.filter(buffImage, null);
 
-			String destPath = "G:\\Users\\fkwls\\Desktop\\thumbnail\\thumb_" + srcFileNm;
+			destPath = thumbnailRoot + srcFileNm;
 			File destFile = new File(destPath);
 
 			ImageIO.write(rescaledImage, "png", destFile);
 		} catch (IOException e) {
 			e.printStackTrace();
-			return false;
 		}
 
-		return true;
+		return destPath;
 	}
 
 }
