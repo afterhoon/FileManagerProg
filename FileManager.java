@@ -4,6 +4,7 @@
 	1. 이미지가 많을 경우 불러오는 시간으로 인해 오래걸림
 	2. 실행하고자 하는 파일의 상위 디렉토리 및 파일명에는 띄어쓰기가 없어야 함
 	3. 각종 루트 다 지정 필요함
+	4. 파일 순서 변경 불가, list로 보기 불가, 검색불가, 그룹화 불가
 
 
  ****************************************************************/
@@ -38,14 +39,16 @@ public class FileManager extends JFrame {
 	FileInfo targetFile;
 	JList list;
 
+	JLabel pageLa;
 	JPanel pan[];
 
 	//	int viewWid = 3;
 	//	int viewHei = 4;
-	int viewWid = 5;
-	int viewHei = 4;
+	int viewWid = 2;
+	int viewHei = 2;
 	int viewCnt = 0;
 	int page = 1;
+	int maxPage = 1;
 
 	String chooserRoot = "G:\\Users\\fkwls\\Desktop\\하스스샷";
 	String downloadRoot = "G:\\Users\\fkwls\\Desktop\\FileManagerDownload\\";
@@ -81,6 +84,7 @@ public class FileManager extends JFrame {
 		vAudio = new Vector<FileInfo>();
 		vEtc = new Vector<FileInfo>();
 		vCurr = new Vector<FileInfo>();
+		vCurr = vFile;
 		
 		vFilePan = new Vector<MediaPanel>();
 		vIfLab = new Vector<JLabel>();
@@ -109,16 +113,16 @@ public class FileManager extends JFrame {
 						page++; 
 						break;
 					}
-					if(page < 1) page = 1;
-					else if(page > (vFile.size()-1)/(viewWid*viewHei) + 1) page = (vFile.size()-1)/(viewWid*viewHei) + 1;
-					if(page <= vFile.size()/(viewWid*viewHei)) 
-						viewCnt = viewWid*viewHei;
-					else 
-						viewCnt = vFile.size()%(viewWid*viewHei);
 					refresh(pan[0]);
 				}
 			});
 		}
+		
+		pageLa = new JLabel();
+		pageLa.setText(page + "/" + maxPage);
+		contentPane.add(pageLa);
+		pageLa.setSize(100, 50);
+		pageLa.setLocation(120, 10);
 
 		/* 파일 포맷 버튼 */
 		String formatStr[] = {"전체", "이미지", "문서", "오디오", "기타"};
@@ -138,40 +142,11 @@ public class FileManager extends JFrame {
 					else if(format == formatStr[2]) vCurr = vDocum;
 					else if(format == formatStr[3]) vCurr = vAudio;
 					else if(format == formatStr[4]) vCurr = vEtc;
+					page = 1;
+					refresh(pan[0]);
 				}
 			});
 		}
-		formatBtn[0].addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				System.out.print("vFile");
-				pageInfo(vFile);
-				System.out.print("vImage");
-				pageInfo(vImage);
-				System.out.print("vDocum");
-				pageInfo(vDocum);
-				System.out.print("vAudio");
-				pageInfo(vAudio);
-			}
-		});
-		formatBtn[1].addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				page = Integer.parseInt(textField.getText());
-				if(page <= vFile.size()/(viewWid*viewHei)) {
-					viewCnt = viewWid*viewHei;
-				}
-				else {
-					viewCnt = vFile.size()%(viewWid*viewHei);
-				}
-				refresh(pan[0]);
-			}
-		});
-		formatBtn[2].addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				System.out.println("THIS PATTERN: " + pattern);
-			}
-		});
-
-
 
 		/* 파일정보창 */
 		info_panel = new JPanel();
@@ -232,6 +207,11 @@ public class FileManager extends JFrame {
 		textField.setBounds(478, 25, 96, 29);
 		contentPane.add(textField);
 		textField.setColumns(10);
+		textField.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				//
+			}
+		});
 		/***************************** 검색창 종료 *****************************/
 
 
@@ -254,7 +234,7 @@ public class FileManager extends JFrame {
 
 	void makeListPanel(JPanel p) {
 		p.setLayout(new BorderLayout());
-		list = new JList(vFile);
+		list = new JList(vCurr);
 		list.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				FileInfo fi = (FileInfo)list.getSelectedValue();
@@ -270,7 +250,7 @@ public class FileManager extends JFrame {
 	}
 
 	void makeInfoPanel(JPanel p) {
-		String str[] = {"절대경로", "파 일 명", "수정날짜", "크     기", "숨김여부", "파일타입"};
+		String str[] = {"파일경로", "파  일  명", "수정날짜", "크         기", "숨김여부", "파일타입"};
 		p.setLayout(new GridLayout(str.length, 2));
 		for(int i = 0 ; i < str.length ; i++) {
 			JLabel la = new JLabel();
@@ -466,12 +446,21 @@ public class FileManager extends JFrame {
 	}
 
 	public void fileIO() {
-		page = (vFile.size()-1)/(viewWid*viewHei) + 1;
-		viewCnt = (vFile.size()-1)%(viewWid*viewHei);
+		page = (vCurr.size()-1)/(viewWid*viewHei) + 1;
+		viewCnt = (vCurr.size()-1)%(viewWid*viewHei);
 		viewCnt++;
 	}
 
 	public void refresh(JPanel p) {
+		if(page < 1) page = 1;
+		else if(page > (vCurr.size()-1)/(viewWid*viewHei) + 1) page = (vCurr.size()-1)/(viewWid*viewHei) + 1;
+		if(page <= vCurr.size()/(viewWid*viewHei)) 
+			viewCnt = viewWid*viewHei;
+		else 
+			viewCnt = vCurr.size()%(viewWid*viewHei);
+		maxPage = (vCurr.size()-1)/(viewWid*viewHei) + 1;
+		pageLa.setText(page + "/" + maxPage);
+		
 		for(int i = 0 ; i < viewWid*viewHei ; i++) {
 			//			MediaButton btn = new MediaButton();
 			//			vFileBtn.setElementAt(btn, i);
@@ -543,7 +532,14 @@ public class FileManager extends JFrame {
 			}
 
 			System.out.println(targetFile.toString() + " 삭제되었습니다.");
+			switch(targetFile.getType()) {
+			case 'i': vImage.remove(targetFile); break;
+			case 'd': vDocum.remove(targetFile); break;
+			case 'a': vAudio.remove(targetFile); break;
+			default: vEtc.remove(targetFile); break;
+			}
 			vFile.remove(targetFile);
+			
 			targetFile = null;
 
 			fileIO();
@@ -577,31 +573,31 @@ public class FileManager extends JFrame {
 
 		MediaPanel(int num) {
 			setMediaPanel(num);
-			info = vFile.elementAt(num);
+			info = vCurr.elementAt(num);
 			la.setText(info.getFileName());
 		}
 
 		public void setMediaPanel(int num) {
-			switch(vFile.elementAt(num + (page-1)*viewWid*viewHei).type) {
+			switch(vCurr.elementAt(num + (page-1)*viewWid*viewHei).type) {
 			case 'i':
-				imageIcon = new ImageIcon(vFile.elementAt(num + (page-1)*viewWid*viewHei).getThumbIMG());
-				mBtn.setImage(imageIcon, vFile.elementAt(num + (page-1)*viewWid*viewHei));
+				imageIcon = new ImageIcon(vCurr.elementAt(num + (page-1)*viewWid*viewHei).getThumbIMG());
+				mBtn.setImage(imageIcon, vCurr.elementAt(num + (page-1)*viewWid*viewHei));
 				break;
 			case 'd': 
-				mBtn.setDocum(vFile.elementAt(num + (page-1)*viewWid*viewHei));
+				mBtn.setDocum(vCurr.elementAt(num + (page-1)*viewWid*viewHei));
 				break;
 			case 'a':
 				imageIcon = new ImageIcon("audio.jpg"); // load the image to a imageIcon
 				image = imageIcon.getImage(); // transform it
 				newimg = image.getScaledInstance(120, 120,  java.awt.Image.SCALE_SMOOTH); // scale it the smooth way 
 				imageIcon = new ImageIcon(newimg);
-				mBtn.setImage(imageIcon, vFile.elementAt(num + (page-1)*viewWid*viewHei));
+				mBtn.setImage(imageIcon, vCurr.elementAt(num + (page-1)*viewWid*viewHei));
 				break;
 			default:
 				mBtn.setText("?");
 				break;
 			}
-			info = vFile.elementAt(num);
+			info = vCurr.elementAt(num + (page-1)*viewWid*viewHei);
 			la.setText(info.getFileName());
 
 		}
