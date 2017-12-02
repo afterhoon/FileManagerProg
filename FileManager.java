@@ -18,9 +18,11 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class FileManager extends JFrame {
 
 	private JPanel contentPane;
+	JPanel info_panel;
 	private JTextField textField;
 	Vector<FileInfo> vFile;
-	Vector<MediaButton> vFileBtn;
+	Vector<MediaPanel> vFilePan;
+	Vector<JLabel> vIfLab;
 	FileInfo targetFile;
 	
 	JPanel pan[];
@@ -56,7 +58,8 @@ public class FileManager extends JFrame {
 
 	void makeGUI() {
 		vFile = new Vector<FileInfo>();
-		vFileBtn = new Vector<MediaButton>();
+		vFilePan = new Vector<MediaPanel>();
+		vIfLab = new Vector<JLabel>();
 		
 		contentPane = new JPanel();
 		contentPane.setBackground(new Color(57, 174, 169));
@@ -105,7 +108,7 @@ public class FileManager extends JFrame {
 		formatBtn[0].addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("vFile.size(): " + vFile.size());
-				System.out.println("vFileBtn.size(): " + vFileBtn.size());
+				System.out.println("vFileBtn.size(): " + vFilePan.size());
 				System.out.println("viewCnt: " + viewCnt);
 				System.out.println("page: " + page);
 			}
@@ -131,9 +134,10 @@ public class FileManager extends JFrame {
 		
 
 		/* 파일정보창 */
-		JPanel info_panel = new JPanel();
+		info_panel = new JPanel();
 		info_panel.setBounds(12, 357, 150, 119);
 		contentPane.add(info_panel);
+		makeInfoPanel(info_panel);
 
 		/* 파일 컨트롤 버튼 */
 		String controlStr[] = {"추가", "삭제", "다운로드"};
@@ -204,25 +208,47 @@ public class FileManager extends JFrame {
 		p.setLayout(new GridLayout(viewHei, viewWid));
 
 		for(int i = 0 ; i < viewWid*viewHei ; i++) {
-			MediaButton btn = new MediaButton();
-			vFileBtn.addElement(btn);
-			btn.setVisible(false);
-			btn.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					MediaButton b = (MediaButton)e.getSource();
-					targetFile = b.getFileInfo();
-					targetFile.showFileInfo();
-				}
-			});
-			p.add(btn);
+			MediaPanel mPan = new MediaPanel();
+			vFilePan.addElement(mPan);
+			mPan.setVisible(false);
+			p.add(mPan);
 		}
+	}
+	
+	void makeInfoPanel(JPanel p) {
+		String str[] = {"절대경로", "파 일 명", "수정날짜", "크     기", "숨김여부", "파일타입"};
+		p.setLayout(new GridLayout(str.length, 2));
+		for(int i = 0 ; i < str.length ; i++) {
+			JLabel la = new JLabel();
+			p.add(new JLabel(str[i]));
+			p.add(la);
+			vIfLab.addElement(la);
+		}
+	}
+	
+	void viewInfoPanel() {
+		vIfLab.elementAt(0).setText(targetFile == null ? "" : targetFile.getAddr());
+		vIfLab.elementAt(1).setText(targetFile == null ? "" : targetFile.getFileName());
+		vIfLab.elementAt(2).setText(targetFile == null ? "" : targetFile.getDate());
+		vIfLab.elementAt(3).setText(targetFile == null ? "" : targetFile.getSize());
+		vIfLab.elementAt(4).setText(targetFile == null ? "" : (targetFile.getHide()? "숨김": "공개"));
+		String type = "";
+		switch(targetFile.getType()) {
+		case 'i': type = "IMAGE"; break;
+		case 'd': type = "DOCUMENT"; break;
+		case 'a': type = "AUDIO"; break;
+		default: type = "UNKNOWN"; break;
+		}
+		vIfLab.elementAt(5).setText(targetFile == null ? "" : type);
 	}
 
 	class FileInfo {		
 		String address;
 		String fileName;
 		String date;
-		long fileSize;
+		int fileSize;
+		int size;
+		String unit;
 		char type;
 		boolean hide = false;
 
@@ -230,7 +256,8 @@ public class FileManager extends JFrame {
 			address = f.getPath();
 			fileName = f.getName();
 			date = new SimpleDateFormat("yyyy-MM-dd / HH:mm:ss").format(f.lastModified());
-			fileSize = f.length();
+			fileSize = (int)f.length();
+			sizeComp();
 			type = searchFileType();
 		}
 		
@@ -251,8 +278,26 @@ public class FileManager extends JFrame {
 			case "mp4": return 'a';
 			default: return 'x';
 			}
+		}
+		
+		// 파일 사이즈 짧게 조정
+		public void sizeComp() {
+			int temp = fileSize;
+			int s = 0;
+			int u = 0;
 			
-			
+			while(temp > 0) {
+				if(temp/1024 > 0) u++;
+				else s = temp;
+				temp /= 1024;
+			}
+			size = s;
+			switch(u) {
+			case 0: unit = "Byte"; break;
+			case 1: unit = "KB"; break;
+			case 2: unit = "MB"; break;
+			default: unit = "GB"; break;
+			}
 		}
 
 		public void setAddr(String addr) {
@@ -267,7 +312,7 @@ public class FileManager extends JFrame {
 			fileName = fn;
 		}
 
-		public void setFileSize(long s) {
+		public void setFileSize(int s) {
 			fileSize = s;
 		}
 
@@ -293,6 +338,10 @@ public class FileManager extends JFrame {
 
 		public long getFileSize() {
 			return fileSize;
+		}
+		
+		public String getSize() {
+			return Integer.toString(size) + unit;
 		}
 
 		public boolean getHide() {
@@ -338,7 +387,7 @@ public class FileManager extends JFrame {
 
 			File selectedFile = chooser.getSelectedFile();
 			vFile.addElement(new FileInfo(selectedFile));
-			(new FileInfo(selectedFile)).showFileInfo();
+//			(new FileInfo(selectedFile)).showFileInfo();
 			
 			fileIO();
 			refresh(pan[0]);
@@ -350,66 +399,21 @@ public class FileManager extends JFrame {
 		viewCnt = (vFile.size()-1)%(viewWid*viewHei);
 		viewCnt++;
 	}
-	
-	/*
-	public void upload() {
-		page = (vFile.size()-1)/(viewWid*viewHei) + 1;
-		viewCnt = (vFile.size()-1)%(viewWid*viewHei);
-		viewCnt++;
-	}
-	
-	public void delete() {
-		viewCnt--;
-		if(viewCnt <= 0) {
-			if(page <= 1) {
-				viewCnt = 0;
-			}
-			else {
-				viewCnt = viewWid*viewHei;
-				page--;
-			}
-		}
-	}
-	 * */
 
 	public void refresh(JPanel p) {
 		for(int i = 0 ; i < viewWid*viewHei ; i++) {
 //			MediaButton btn = new MediaButton();
 //			vFileBtn.setElementAt(btn, i);
-			vFileBtn.elementAt(i).setVisible(false);
-			vFileBtn.elementAt(i).setIcon(null);
-			vFileBtn.elementAt(i).setText(null);
+			vFilePan.elementAt(i).setVisible(false);
+			vFilePan.elementAt(i).mBtn.setIcon(null);
+			vFilePan.elementAt(i).mBtn.setText(null);
 //			vFileBtn.elementAt(i).iCon
 		}
 
 		for(int i = 0 ; i < viewCnt ; i++) {
-			MediaButton btn = vFileBtn.elementAt(i);
-			ImageIcon imageIcon;
-			Image image, newimg;
-			
-			switch(vFile.elementAt(i + (page-1)*viewWid*viewHei).type) {
-			case 'i':
-				imageIcon = new ImageIcon(vFile.elementAt(i + (page-1)*viewWid*viewHei).getAddr()); // load the image to a imageIcon
-				image = imageIcon.getImage(); // transform it
-				newimg = image.getScaledInstance(120, 120,  java.awt.Image.SCALE_SMOOTH); // scale it the smooth way 
-				imageIcon = new ImageIcon(newimg);
-				btn.setImage(imageIcon, vFile.elementAt(i));
-				break;
-			case 'd': 
-				btn.setDocum(vFile.elementAt(i + (page-1)*viewWid*viewHei));
-				break;
-			case 'a':
-				imageIcon = new ImageIcon("audio.jpg"); // load the image to a imageIcon
-				image = imageIcon.getImage(); // transform it
-				newimg = image.getScaledInstance(120, 120,  java.awt.Image.SCALE_SMOOTH); // scale it the smooth way 
-				imageIcon = new ImageIcon(newimg);
-				btn.setImage(imageIcon, vFile.elementAt(i + (page-1)*viewWid*viewHei));
-				break;
-			default:
-				btn.setText("?");
-				break;
-			}
-			btn.setVisible(true);
+			MediaPanel mPan = vFilePan.elementAt(i);
+			mPan.setMediaPanel(i);
+			mPan.setVisible(true);
 		}
 		p.updateUI();
 	}
@@ -480,13 +484,69 @@ public class FileManager extends JFrame {
 	}
 	
 	class MediaPanel extends JPanel {
+		FileInfo info;
+		MediaButton mBtn;
+		ImageIcon imageIcon;
+		Image image, newimg;
+		JLabel la;
+		MediaPanel() {
+			setLayout(new BorderLayout());
+			
+			mBtn = new MediaButton();
+			la = new JLabel();
+			
+			add(mBtn, BorderLayout.CENTER);
+			add(la, BorderLayout.SOUTH);
+		}
+		
+		MediaPanel(int num) {
+			setMediaPanel(num);
+			info = vFile.elementAt(num);
+			la.setText(info.getFileName());
+		}
+		
+		public void setMediaPanel(int num) {
+			switch(vFile.elementAt(num + (page-1)*viewWid*viewHei).type) {
+			case 'i':
+				imageIcon = new ImageIcon(vFile.elementAt(num + (page-1)*viewWid*viewHei).getAddr()); // load the image to a imageIcon
+				image = imageIcon.getImage(); // transform it
+				newimg = image.getScaledInstance(120, 120,  java.awt.Image.SCALE_SMOOTH); // scale it the smooth way 
+				imageIcon = new ImageIcon(newimg);
+				mBtn.setImage(imageIcon, vFile.elementAt(num));
+				break;
+			case 'd': 
+				mBtn.setDocum(vFile.elementAt(num + (page-1)*viewWid*viewHei));
+				break;
+			case 'a':
+				imageIcon = new ImageIcon("audio.jpg"); // load the image to a imageIcon
+				image = imageIcon.getImage(); // transform it
+				newimg = image.getScaledInstance(120, 120,  java.awt.Image.SCALE_SMOOTH); // scale it the smooth way 
+				imageIcon = new ImageIcon(newimg);
+				mBtn.setImage(imageIcon, vFile.elementAt(num + (page-1)*viewWid*viewHei));
+				break;
+			default:
+				mBtn.setText("?");
+				break;
+			}
+			info = vFile.elementAt(num);
+			la.setText(info.getFileName());
+			
+		}
 		
 	}
 
 	class MediaButton extends JButton {
 		FileInfo info;
 		MediaButton() {
-			
+			addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					MediaButton b = (MediaButton)e.getSource();
+					targetFile = b.getFileInfo();
+					targetFile.showFileInfo();
+					viewInfoPanel();
+					info_panel.updateUI();
+				}
+			});
 		}
 		
 		MediaButton(FileInfo fi) {
