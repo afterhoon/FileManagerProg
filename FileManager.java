@@ -101,10 +101,11 @@ public class FileManager extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 
+		String lr1[] = {" ", "  "};
 		String lr[] = {"images\\prev.png", "images\\next.png"};
 		JButton lrBtn[] = new JButton[lr.length];
 		for(int i = 0 ; i < lr.length ; i++) {
-			lrBtn[i] = new JButton(new ImageIcon(lr[i]));
+			lrBtn[i] = new JButton(lr1[i], new ImageIcon(lr[i]));
 			contentPane.add(lrBtn[i]);
 			lrBtn[i].setSize(130, 32);
 			lrBtn[i].setLocation(350+i*250, 0);
@@ -116,14 +117,8 @@ public class FileManager extends JFrame {
 			lrBtn[i].addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					JButton b = (JButton)e.getSource();
-					switch(b.getName()) {
-					case "lrBtn[0]": 
-						page--;
-						break;
-					case "lrBtn[1]": 
-						page++; 
-						break;
-					}
+					if(b.getText() == lr1[0]) page--;
+					else if(b.getText() == lr1[1]) page++;
 					refresh(0);
 				}
 			});
