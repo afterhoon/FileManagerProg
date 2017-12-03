@@ -40,13 +40,14 @@ public class FileManager extends JFrame {
 	FileInfo targetFile;
 	JList list;
 
-	JLabel pageLa;
-	JPanel pan[];
+	JTextField pageLa;
+	JPanel viewPanel;
+	JLabel pageLa2;
 
 	//	int viewWid = 3;
 	//	int viewHei = 4;
-	int viewWid = 2;
-	int viewHei = 2;
+	int viewWid = 5;
+	int viewHei = 3;
 	int viewCnt = 0;
 	int page = 1;
 	int maxPage = 1;
@@ -78,7 +79,7 @@ public class FileManager extends JFrame {
 		makeGUI();
 
 		setResizable(false);
-		setBounds(100, 100, 590, 518);
+		setBounds(100, 100, 1150, 600);
 	}
 
 	void makeGUI() {
@@ -95,26 +96,31 @@ public class FileManager extends JFrame {
 		vIfLab = new Vector<JLabel>();
 
 		contentPane = new JPanel();
-		contentPane.setBackground(new Color(57, 174, 169));
+		contentPane.setBackground(Color.WHITE);
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 
-		String lr[] = {"<", ">"};
+		String lr[] = {"images\\prev.png", "images\\next.png"};
 		JButton lrBtn[] = new JButton[lr.length];
 		for(int i = 0 ; i < lr.length ; i++) {
-			lrBtn[i] = new JButton(lr[i]);
+			lrBtn[i] = new JButton(new ImageIcon(lr[i]));
 			contentPane.add(lrBtn[i]);
-			lrBtn[i].setSize(50, 50);
-			lrBtn[i].setLocation(10+i*50, 10);
+			lrBtn[i].setSize(130, 32);
+			lrBtn[i].setLocation(350+i*250, 0);
+
+			lrBtn[i].setBorderPainted(false);
+			lrBtn[i].setFocusPainted(false);
+			lrBtn[i].setContentAreaFilled(false);
+
 			lrBtn[i].addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					JButton b = (JButton)e.getSource();
-					switch(b.getText()) {
-					case "<": 
+					switch(b.getName()) {
+					case "lrBtn[0]": 
 						page--;
 						break;
-					case ">": 
+					case "lrBtn[1]": 
 						page++; 
 						break;
 					}
@@ -123,19 +129,79 @@ public class FileManager extends JFrame {
 			});
 		}
 
-		pageLa = new JLabel();
-		pageLa.setText(page + "/" + maxPage);
+		pageLa = new JTextField();
+		pageLa.setText(Integer.toString(page));
+		pageLa.setFont(new Font("Arial",pageLa.getFont().getStyle(),20));
+		pageLa.setBounds(485, 0, 30, 31);
+		pageLa.setBorder(null);
 		contentPane.add(pageLa);
-		pageLa.setSize(100, 50);
-		pageLa.setLocation(120, 10);
+		pageLa.setColumns(10);
+		pageLa.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					page = Integer.parseInt(pageLa.getText());
+				} catch(NumberFormatException e1) {
+					
+				}
+				
+				System.out.println("page: " + page);
+				if(page <= vFile.size()/(viewWid*viewHei)) {
+					viewCnt = viewWid*viewHei;
+				}
+				else {
+					viewCnt = vFile.size()%(viewWid*viewHei);
+				}
+				refresh(0);
+			}
+		});
+
+		pageLa2 = new JLabel();
+		pageLa2.setText("/ " + maxPage);
+
+		pageLa2.setFont(new Font("Arial",pageLa.getFont().getStyle(),20));
+		contentPane.add(pageLa2);
+		pageLa2.setSize(30, 31);
+		pageLa2.setLocation(520, 0);
+
+
+		/* 파일정보창 */
+		info_panel = new JPanel();
+		info_panel.setBounds(40,405,552,119);
+		contentPane.add(info_panel);
+		makeInfoPanel(info_panel);
+
+		/* 파일 컨트롤 버튼 */
+		String controlStr[] = {"업로드", "삭제", "다운로드"};
+		JButton controlBtn[] = new JButton[controlStr.length];
+		for(int i = 0 ; i < controlBtn.length ; i++) {
+			controlBtn[i] = new JButton(controlStr[i]);
+			controlBtn[i].setSize(110, 47);
+			controlBtn[i].setLocation(630 + 122*i, 470);
+			contentPane.add(controlBtn[i]);
+		}
+
+		/* 탑펜 */
+		viewPanel = new JPanel();
+		viewPanel.setBounds(174, 42, 840, 354);
+		contentPane.add(viewPanel);
+		makeIconPanel(viewPanel);
 
 		/* 파일 포맷 버튼 */
-		String formatStr[] = {"전체", "이미지", "문서", "오디오", "기타"};
+		String formatStr[] = {"images\\label1.png", 
+				"images\\label2.png",
+				"images\\label3.png",
+				"images\\label4.png",
+		"images\\label5.png"};
 		JButton formatBtn[] = new JButton[formatStr.length];
 		for(int i = 0 ; i < formatBtn.length ; i++) {
-			formatBtn[i] = new JButton(formatStr[i]);
+			formatBtn[i] = new JButton(formatStr[i], new ImageIcon(formatStr[i]));
 			formatBtn[i].setSize(150, 47);
-			formatBtn[i].setLocation(12, 72 + 57*i);
+			formatBtn[i].setLocation(40, 70 + 57*i);
+
+			formatBtn[i].setBorderPainted(false);
+			formatBtn[i].setFocusPainted(false);
+			formatBtn[i].setContentAreaFilled(false);
+
 			contentPane.add(formatBtn[i]);
 			formatBtn[i].addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
@@ -146,47 +212,16 @@ public class FileManager extends JFrame {
 					else if(format == formatStr[2]) mode = 2;
 					else if(format == formatStr[3]) mode = 3;
 					else if(format == formatStr[4]) mode = 4;
-					
+
 					page = 1;
-//					refresh(0);
+					//					refresh(0);
 					sortFile(sortMode);
 				}
 			});
 		}
 
-		/* 파일정보창 */
-		info_panel = new JPanel();
-		info_panel.setBounds(12, 357, 150, 119);
-		contentPane.add(info_panel);
-		makeInfoPanel(info_panel);
-
-		/* 파일 컨트롤 버튼 */
-		String controlStr[] = {"추가", "삭제", "다운로드"};
-		JButton controlBtn[] = new JButton[controlStr.length];
-		for(int i = 0 ; i < controlBtn.length ; i++) {
-			controlBtn[i] = new JButton(controlStr[i]);
-			controlBtn[i].setSize(110, 47);
-			controlBtn[i].setLocation(202 + 122*i, 428);
-			contentPane.add(controlBtn[i]);
-		}
-
-		/* 탑펜 */
-		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		tabbedPane.setBounds(174, 64, 400, 354);
-		contentPane.add(tabbedPane);
-
-
-		String panStr[] = {"ICON", "LIST"};
-		pan = new JPanel[panStr.length];
-		for(int i = 0 ; i < pan.length ; i++) {
-			pan[i] = new JPanel();
-			tabbedPane.addTab(panStr[i], pan[i]);
-		}
-		makeIconPanel(pan[0]);
-		makeListPanel(pan[1]);
-
 		/***************************** 분류 시작 *****************************/
-		
+
 		String sortStr[] = { "저장순", "이름순", "형식순", "날짜순" };
 		JComboBox comboBox = new JComboBox();
 		comboBox.setModel(new DefaultComboBoxModel(sortStr));
@@ -199,7 +234,7 @@ public class FileManager extends JFrame {
 				else if((String)c.getSelectedItem() == sortStr[1]) sortMode = 1;
 				else if((String)c.getSelectedItem() == sortStr[2]) sortMode = 2;
 				else if((String)c.getSelectedItem() == sortStr[3]) sortMode = 3;
-				
+
 				sortFile(sortMode);
 			}
 		});
@@ -208,7 +243,8 @@ public class FileManager extends JFrame {
 		/***************************** 검색창 시작 *****************************/
 		textField = new JTextField();
 		textField.setText("검색하기");
-		textField.setBounds(478, 25, 96, 29);
+		textField.setBounds(813, 0, 200, 31);
+		textField.setBorder(null);
 		contentPane.add(textField);
 		textField.setColumns(10);
 		textField.addActionListener(new ActionListener() {
@@ -226,19 +262,27 @@ public class FileManager extends JFrame {
 		controlBtn[1].addActionListener(new DeleteActionListener());
 		controlBtn[2].addActionListener(new DownloadActionListener());
 
+		makeBackground(contentPane);
 	}
-	
+
+	void makeBackground(JPanel p) {
+		JPanel top = new JPanel();
+		top.setBackground(new Color(65,140,255));
+		p.add(top);
+		top.setBounds(-5, -5, 1200, 39);
+	}
+
 	void sortFile(int s) {
 		refresh(0);
-		
+
 		if(s == 0) return;
 		if(vCurr.size() == 0) return;
 
 		Vector<FileInfo> vSort = new Vector<FileInfo>();
 		vSort.addElement(vCurr.elementAt(0));
-		
+
 		if(vCurr.size() == 1) return;
-		
+
 		for(int i = 1 ; i < vCurr.size() ; i++) {
 			int cnt = 0;
 			while(true) {
@@ -261,7 +305,7 @@ public class FileManager extends JFrame {
 				}
 				sStr = sStr.toLowerCase();
 				cStr = cStr.toLowerCase();
-				
+
 				if(sStr.compareTo(cStr) > 0) {
 					vSort.add(cnt, vCurr.elementAt(i));
 					break;
@@ -273,11 +317,11 @@ public class FileManager extends JFrame {
 				}
 			}
 		}
-		
-//		for(int i = 0 ; i < vSort.size() ; i++)
-//			System.out.print(vSort.elementAt(i).getFileName()+" -> ");
-//		System.out.println();
-		
+
+		//		for(int i = 0 ; i < vSort.size() ; i++)
+		//			System.out.print(vSort.elementAt(i).getFileName()+" -> ");
+		//		System.out.println();
+
 		vCurr = vSort;
 		refresh(1);
 	}
@@ -287,12 +331,12 @@ public class FileManager extends JFrame {
 		vSearch.removeAllElements();
 		for(int i = 0 ; i < vFile.size() ; i++) {
 			if(vFile.elementAt(i).getFileName().toLowerCase().indexOf(sch.toLowerCase())!=-1){
-//				System.out.println(vFile.elementAt(i).getFileName());
+				//				System.out.println(vFile.elementAt(i).getFileName());
 				vSearch.addElement(vFile.elementAt(i));
 			}
 		}
 		mode = 5;
-//		refresh(0);
+		//		refresh(0);
 		sortFile(sortMode);
 	}
 
@@ -325,12 +369,24 @@ public class FileManager extends JFrame {
 	}
 
 	void makeInfoPanel(JPanel p) {
-		String str[] = {"파일경로", "파  일  명", "수정날짜", "크         기", "숨김여부", "파일타입"};
-		p.setLayout(new GridLayout(str.length, 2));
+		p.setLayout(new BorderLayout());
+
+
+		JPanel innerPan[] = new JPanel[2];
+		String str[] = {" 파일경로   ", " 파  일  명   ", " 수정날짜", " 크         기", " 숨김여부", " 파일타입"};
+
+		for(int i = 0 ; i < 2 ; i++) {
+			innerPan[i] = new JPanel();
+			innerPan[i].setLayout(new GridLayout(str.length, 1));
+			innerPan[i].setBackground(new Color(255,255,255));
+		}
+		p.add(innerPan[0], BorderLayout.WEST);
+		p.add(innerPan[1], BorderLayout.CENTER);
+
 		for(int i = 0 ; i < str.length ; i++) {
 			JLabel la = new JLabel();
-			p.add(new JLabel(str[i]));
-			p.add(la);
+			innerPan[0].add(new JLabel(str[i]));
+			innerPan[1].add(la);
 			vIfLab.addElement(la);
 		}
 	}
@@ -352,7 +408,7 @@ public class FileManager extends JFrame {
 		info_panel.updateUI();
 	}
 
-	class FileInfo {		
+	class FileInfo {
 		String address;
 		String thumbIMG;
 		String fileName;
@@ -393,7 +449,7 @@ public class FileManager extends JFrame {
 			str += fileName.charAt(fileName.length()-2);
 			str += fileName.charAt(fileName.length()-1);
 			ext = str.toLowerCase();
-			
+
 			switch(ext) {
 			case "jpg":
 			case "png":
@@ -500,7 +556,7 @@ public class FileManager extends JFrame {
 		public char getType() {
 			return type;
 		}
-		
+
 		public String getExt() {
 			return ext;
 		}
@@ -532,7 +588,7 @@ public class FileManager extends JFrame {
 		public void actionPerformed(ActionEvent e) {
 			int ret = chooser.showOpenDialog(null);
 			if (ret != JFileChooser.APPROVE_OPTION) {
-//				JOptionPane.showMessageDialog(null, "파일을 선택하지 않았습니다", "경고", JOptionPane.WARNING_MESSAGE);
+				//				JOptionPane.showMessageDialog(null, "파일을 선택하지 않았습니다", "경고", JOptionPane.WARNING_MESSAGE);
 				return;
 			}
 
@@ -549,13 +605,13 @@ public class FileManager extends JFrame {
 
 			fileIO();
 			searchFile(keyword);
-//			refresh(0);
+			//			refresh(0);
 			sortFile(sortMode);
 		}
 	}
 
 	public void fileIO() {
-		page = (vCurr.size()-1)/(viewWid*viewHei) + 1;
+		page = vCurr.size()/(viewWid*viewHei) + 1;
 		viewCnt = (vCurr.size()-1)%(viewWid*viewHei);
 		viewCnt++;
 	}
@@ -572,7 +628,7 @@ public class FileManager extends JFrame {
 			case 5: vCurr = vSearch; break;
 			}
 		}
-		
+
 		if(page < 1) page = 1;
 		else if(page > (vCurr.size()-1)/(viewWid*viewHei) + 1) page = (vCurr.size()-1)/(viewWid*viewHei) + 1;
 		if(page <= vCurr.size()/(viewWid*viewHei)) 
@@ -580,7 +636,8 @@ public class FileManager extends JFrame {
 		else 
 			viewCnt = vCurr.size()%(viewWid*viewHei);
 		maxPage = (vCurr.size()-1)/(viewWid*viewHei) + 1;
-		pageLa.setText(page + "/" + maxPage);
+		pageLa.setText(page+"");
+		pageLa2.setText("/ " + maxPage);
 
 		for(int i = 0 ; i < viewWid*viewHei ; i++) {
 			vFilePan.elementAt(i).setVisible(false);
@@ -593,7 +650,7 @@ public class FileManager extends JFrame {
 			mPan.setMediaPanel(i);
 			mPan.setVisible(true);
 		}
-		pan[0].updateUI();
+		viewPanel.updateUI();
 	}
 
 	class DownloadActionListener implements ActionListener {
@@ -706,10 +763,7 @@ public class FileManager extends JFrame {
 				mBtn.setDocum(vCurr.elementAt(num + (page-1)*viewWid*viewHei));
 				break;
 			case 'a':
-				imageIcon = new ImageIcon("audio.jpg"); // load the image to a imageIcon
-				image = imageIcon.getImage(); // transform it
-				newimg = image.getScaledInstance(120, 120,  java.awt.Image.SCALE_SMOOTH); // scale it the smooth way 
-				imageIcon = new ImageIcon(newimg);
+				imageIcon = new ImageIcon("images\\audio.png");
 				mBtn.setImage(imageIcon, vCurr.elementAt(num + (page-1)*viewWid*viewHei));
 				break;
 			default:
@@ -727,6 +781,10 @@ public class FileManager extends JFrame {
 	class MediaButton extends JButton {
 		FileInfo info;
 		MediaButton() {
+			setBorderPainted(false);
+			setFocusPainted(false);
+			setContentAreaFilled(false);
+
 			addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					MediaButton b = (MediaButton)e.getSource();
@@ -815,7 +873,7 @@ public class FileManager extends JFrame {
 			setText("<html>" + str[0] + "<br>" + str[1] + "<br>" + str[2] + "</html>");
 			info = fi;
 		}
-		
+
 		public void setUnk(FileInfo fi) {
 			info = fi;
 		}
@@ -843,7 +901,7 @@ public class FileManager extends JFrame {
 	 * @return
 	 */
 	public static String createImageThumbnail(String srcPath, String srcFileNm) {
-		return createImageThumbnail(srcPath, srcFileNm, 150, 150);
+		return createImageThumbnail(srcPath, srcFileNm, 155, 90);
 	}
 
 	public static String createImageThumbnail(String srcPath, String srcFileNm, int width, int height) {
