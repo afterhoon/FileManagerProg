@@ -55,12 +55,15 @@ public class FileManager extends JFrame {
 	int sortMode = 0;
 	String keyword = "";
 
-	String chooserRoot = "C:\\Users\\hooni\\Desktop\\FileManager\\storage";
-	String downloadRoot = "C:\\Users\\hooni\\Desktop\\FileManager\\download\\";
+	static String desktopRoot = "C:\\Users\\Jihoon\\Desktop\\FileManager\\";
+	String databaseRoot = desktopRoot + "db\\";
+	String tempRoot = desktopRoot + "db\\temp\\";
+	String chooserRoot = desktopRoot + "storage";
+	String downloadRoot = desktopRoot + "download\\";
 	String photoViewer = "mspaint.exe";
 	String documentViewer = "notepad.exe";
-	String musicPlayer = "C:\\Users\\hooni\\Desktop\\FileManager\\wmplayer.exe";
-	static String thumbnailRoot = "C:\\Users\\hooni\\Desktop\\FileManager\\thumbnail\\thumb_"; // 맨 뒤에 파일명 머리글 추가
+	String musicPlayer = desktopRoot + "wmplayer.exe";
+	static String thumbnailRoot = desktopRoot + "thumbnail\\thumb_"; // 맨 뒤에 파일명 머리글 추가
 
 	String pattern = "";
 
@@ -96,7 +99,7 @@ public class FileManager extends JFrame {
 		vIfLab = new Vector<JLabel>();
 
 		contentPane = new JPanel();
-		contentPane.setBackground(Color.WHITE);
+		contentPane.setBackground(new Color(175,206,225));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
@@ -107,8 +110,8 @@ public class FileManager extends JFrame {
 		for(int i = 0 ; i < lr.length ; i++) {
 			lrBtn[i] = new JButton(lr1[i], new ImageIcon(lr[i]));
 			contentPane.add(lrBtn[i]);
-			lrBtn[i].setSize(130, 32);
-			lrBtn[i].setLocation(350+i*250, 0);
+			lrBtn[i].setSize(80, 32);
+			lrBtn[i].setLocation(150+i*145, 0);
 
 			lrBtn[i].setBorderPainted(false);
 			lrBtn[i].setFocusPainted(false);
@@ -127,18 +130,24 @@ public class FileManager extends JFrame {
 		pageLa = new JTextField();
 		pageLa.setText(Integer.toString(page));
 		pageLa.setFont(new Font("Arial",pageLa.getFont().getStyle(),20));
-		pageLa.setBounds(485, 0, 30, 31);
+		pageLa.setBounds(230, 3, 30, 28);
 		pageLa.setBorder(null);
+		pageLa.setHorizontalAlignment(SwingConstants.CENTER);
 		contentPane.add(pageLa);
 		pageLa.setColumns(10);
+		pageLa.addMouseListener(new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				pageLa.setText("");
+			}
+		});
 		pageLa.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					page = Integer.parseInt(pageLa.getText());
 				} catch(NumberFormatException e1) {
-					
+
 				}
-				
+
 				System.out.println("page: " + page);
 				if(page <= vFile.size()/(viewWid*viewHei)) {
 					viewCnt = viewWid*viewHei;
@@ -156,7 +165,7 @@ public class FileManager extends JFrame {
 		pageLa2.setFont(new Font("Arial",pageLa.getFont().getStyle(),20));
 		contentPane.add(pageLa2);
 		pageLa2.setSize(30, 31);
-		pageLa2.setLocation(520, 0);
+		pageLa2.setLocation(265, 2);
 
 
 		/* 파일정보창 */
@@ -166,13 +175,29 @@ public class FileManager extends JFrame {
 		makeInfoPanel(info_panel);
 
 		/* 파일 컨트롤 버튼 */
-		String controlStr[] = {"업로드", "삭제", "다운로드"};
+		String controlStr[] = {"images\\upload1.png", "images\\download1.png", "images\\trash.png"};
 		JButton controlBtn[] = new JButton[controlStr.length];
 		for(int i = 0 ; i < controlBtn.length ; i++) {
-			controlBtn[i] = new JButton(controlStr[i]);
-			controlBtn[i].setSize(110, 47);
-			controlBtn[i].setLocation(630 + 122*i, 470);
+			controlBtn[i] = new JButton(controlStr[i], new ImageIcon(controlStr[i]));
+			controlBtn[i].setSize(80, 80);
+			controlBtn[i].setLocation(630 + 122*i, 410);
+
+			controlBtn[i].setBorderPainted(false);
+			controlBtn[i].setFocusPainted(false);
+			controlBtn[i].setContentAreaFilled(false);
 			contentPane.add(controlBtn[i]);
+		}
+
+
+		String controltext[] = {"UPLOAD","DOWNLOAD","     DELETE"};
+		JLabel controlLabel[] = new JLabel[controltext.length];
+		for(int i=0; i<controlLabel.length; i++) {
+			controlLabel[i] = new JLabel();
+			controlLabel[i].setText(controltext[i]);
+			controlLabel[i].setFont(new Font("Arial",controlLabel[i].getFont().getStyle(),20));
+			controlLabel[i].setSize(150,80);
+			controlLabel[i].setLocation(626 +109*i, 470);
+			contentPane.add(controlLabel[i]);
 		}
 
 		/* 탑펜 */
@@ -217,37 +242,68 @@ public class FileManager extends JFrame {
 
 		/***************************** 분류 시작 *****************************/
 
-		String sortStr[] = { "저장순", "이름순", "형식순", "날짜순" };
-		JComboBox comboBox = new JComboBox();
-		comboBox.setModel(new DefaultComboBoxModel(sortStr));
-		comboBox.setBounds(370, 25, 96, 29);
-		contentPane.add(comboBox);
-		comboBox.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				JComboBox c = (JComboBox)e.getSource();
-				if((String)c.getSelectedItem() == sortStr[0]) sortMode = 0;
-				else if((String)c.getSelectedItem() == sortStr[1]) sortMode = 1;
-				else if((String)c.getSelectedItem() == sortStr[2]) sortMode = 2;
-				else if((String)c.getSelectedItem() == sortStr[3]) sortMode = 3;
+		Font sortFont = new Font("NanumGothic",Font.BOLD,15);
+		JLabel sortTitle = new JLabel("분류");
+		sortTitle.setOpaque(true);
+		sortTitle.setBorder(null);
+		sortTitle.setHorizontalAlignment(SwingConstants.CENTER);
+		sortTitle.setBackground(Color.YELLOW);
+		sortTitle.setForeground(Color.RED);
+		sortTitle.setSize(80,20);
+		sortTitle.setLocation(375,14);
+		sortTitle.setFont(sortFont);
+		contentPane.add(sortTitle);
 
-				sortFile(sortMode);
-			}
-		});
+
+		String sortText[] = {"저장순","이름순","형식순","날짜순"};
+		JButton sortButton[] = new JButton[sortText.length];
+		for(int i=0; i < sortButton.length; i++) {
+			sortButton[i] = new JButton(sortText[i]);
+			sortButton[i].setSize(80,20);
+			sortButton[i].setLocation(455+i*80,14);
+			sortButton[i].setBorderPainted(false);
+			sortButton[i].setFocusPainted(false);
+			//			sortButton[i].setBackground(Color.white);
+			sortButton[i].setBackground(Color.CYAN);
+			sortButton[i].setFont(sortFont);
+			contentPane.add(sortButton[i]);
+			sortButton[i].addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					JButton c = (JButton)e.getSource();
+					if(c.getText() == sortText[0]) sortMode = 0;
+					else if(c.getText() == sortText[1]) sortMode = 1;
+					else if(c.getText() == sortText[2]) sortMode = 2;
+					else if(c.getText() == sortText[3]) sortMode = 3;
+					sortFile(sortMode);
+				}
+			});
+		}
+
+
 		/***************************** 분류 종료 *****************************/
 
 		/***************************** 검색창 시작 *****************************/
 		textField = new JTextField();
 		textField.setText("검색하기");
-		textField.setBounds(813, 0, 200, 31);
+		//		textField.setBounds(813, 0, 200, 31);
+		textField.setBounds(813, 0, 200, 25);
 		textField.setBorder(null);
 		contentPane.add(textField);
 		textField.setColumns(10);
+
+		textField.setFont(new Font("NanumGothic", Font.PLAIN, 15));
+		//		textField.setHorizontalAlignment(SwingConstants.CENTER);
+
+		textField.addMouseListener(new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				textField.setText("");
+			}
+		});
 		textField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println(textField.getText());
 				keyword = textField.getText();
 				searchFile(keyword);
-				textField.setText("");
 			}
 		});
 		/***************************** 검색창 종료 *****************************/
@@ -257,7 +313,97 @@ public class FileManager extends JFrame {
 		controlBtn[1].addActionListener(new DeleteActionListener());
 		controlBtn[2].addActionListener(new DownloadActionListener());
 
+		JLabel logo = new JLabel();
+		logo.setBackground(Color.WHITE);
+		logo.setFont(new Font("Ariel", Font.BOLD, 20));
+		logo.setText("File Manager");
+		contentPane.add(logo);
+		logo.setSize(130, 30);
+		logo.setLocation(12,2);
+
 		makeBackground(contentPane);
+
+
+		//////////////////////// 강지우
+		initFile();
+
+		this.addWindowListener(new WindowAdapter(){
+			public void windowClosing(WindowEvent e) {
+
+				FileInfo temp;
+
+				System.out.println("size>>"+vFile.size());
+
+				for(int i=0; i<vFile.size(); i++) {
+					temp=vFile.elementAt(i);
+					System.out.println(">>"+temp.getFileSize());
+					uploadServer(temp);
+				}
+
+				File dirFile=new File(tempRoot);
+				File []fileList=dirFile.listFiles();
+
+				for(File tempFile : fileList) {
+					tempFile.delete();
+				}	
+
+				System.exit(0);
+			}
+		});
+	}
+
+	// 강지우
+	void initFile() {
+		File dirFile=new File(databaseRoot);
+		File []fileList=dirFile.listFiles();
+
+		FileInfo selfo;
+
+		for(File tempFile : fileList) {
+			if(tempFile.isFile()) {
+
+				selfo = new FileInfo(tempFile);
+
+				FileInputStream  fin  = null;
+				FileOutputStream fout = null;
+				int data = 0 ;
+
+				try{
+					fin = new FileInputStream(selfo.getAddr());
+					fout = new FileOutputStream(tempRoot+ selfo.getFileName()); //확장명 jpg는 바꾸면 안됨
+					while(true) {
+						data = fin.read();
+						if( data == -1) break;
+						fout.write(data); 
+					}
+					selfo.setAddr(tempRoot+ selfo.getFileName());
+					vFile.addElement(selfo);
+					System.out.println();
+					System.out.println(selfo.getFileName() + " 저장 완료");
+
+				}
+				catch(IOException e1) {
+					System.out.println("파일오픈실패");
+					e1.printStackTrace();
+				}
+				finally {
+					try	{
+						fin.close();
+						fout.close();
+					}
+					catch(Exception e1) {
+
+					}
+				}
+				System.out.println("작업종료");
+
+				tempFile.delete();
+				fileIO();
+				searchFile(keyword);
+				//			refresh(0);
+				sortFile(sortMode);
+			}
+		}
 	}
 
 	void makeBackground(JPanel p) {
@@ -368,18 +514,19 @@ public class FileManager extends JFrame {
 
 
 		JPanel innerPan[] = new JPanel[2];
-		String str[] = {" 파일경로   ", " 파  일  명   ", " 수정날짜", " 크         기", " 숨김여부", " 파일타입"};
+		String str[] = {"  파일경로   ", "  파  일  명   ", "  수정날짜", "  크         기", "  숨김여부", "  파일타입"};
 
 		for(int i = 0 ; i < 2 ; i++) {
 			innerPan[i] = new JPanel();
 			innerPan[i].setLayout(new GridLayout(str.length, 1));
-			innerPan[i].setBackground(new Color(255,255,255));
+			innerPan[i].setBackground(new Color(235,235,235));
 		}
 		p.add(innerPan[0], BorderLayout.WEST);
 		p.add(innerPan[1], BorderLayout.CENTER);
 
 		for(int i = 0 ; i < str.length ; i++) {
 			JLabel la = new JLabel();
+			//			la.setFont(new Font("NanumGothic",Font.BOLD,15));
 			innerPan[0].add(new JLabel(str[i]));
 			innerPan[1].add(la);
 			vIfLab.addElement(la);
@@ -718,6 +865,42 @@ public class FileManager extends JFrame {
 		}
 	}
 
+	//강지우
+	void uploadServer(FileInfo in) {		
+		FileInputStream  fin  = null;
+		FileOutputStream fout = null;
+		int data = 0 ;
+
+		try{
+			fin = new FileInputStream(in.getAddr());
+			fout = new FileOutputStream(databaseRoot + in.getFileName()); //확장명 jpg는 바꾸면 안됨
+			while(true) {
+				data = fin.read();
+				if( data == -1) break;
+				fout.write(data); 
+			}
+			System.out.println();
+			System.out.println(in.getFileName() + " 저장 완료");
+
+		}
+		catch(IOException e1) {
+			System.out.println("파일오픈실패");
+			e1.printStackTrace();
+		}
+		finally {
+			try	{
+				fin.close();
+				fout.close();
+			}
+			catch(Exception e1) {
+
+			}
+		}
+		System.out.println("작업종료");
+
+
+
+	}
 
 	// 파일 다이얼로그 선택자
 	void initFileChooser(JFileChooser fc) {
