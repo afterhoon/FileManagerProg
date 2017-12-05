@@ -1,9 +1,7 @@
 /**************************************************
  * 
- *  1. 윈도우 검색창에 hwp 검색
- *  2. 한글 실행파일 오른쪽 클릭해서 파일 위치 열기
- *  3. 한글 바로가기 파일 오른쪽 클릭해서 파일 위치 열기
- *  4. hwp.exe 파일 FileManager 폴더에 복사
+ * 	CAUTION
+ *  To run this program, you must first grab the directory address
  * 
  **************************************************/
 
@@ -53,16 +51,20 @@ public class FileManager extends JFrame {
 	int sortMode = 0;
 	String keyword = "";
 
-	static String desktopRoot = "C:\\Users\\JiHoon\\Desktop\\FileManager\\";
-	String databaseRoot = desktopRoot + "db\\";
-	String chooserRoot = "C:\\Users\\Administrator\\Desktop\\data";
-	String downloadRoot = desktopRoot + "download\\";
-	String photoViewer = "mspaint.exe";
-	String documentViewer = "notepad.exe";
-	String hwpViewer = "C:\\Program Files (x86)\\HNC\\HOffice9\\Bin\\Hwp.exe";
-	String musicPlayer = desktopRoot + "wmplayer.exe";
-	static String thumbnailRoot = desktopRoot + "thumbnail\\thumb_"; // 맨 뒤에 파일명 머리글 추가
-
+	
+	/*************      ADDRESS     ***************************************************************************/
+	static String desktopRoot = "C:\\Users\\JiHoon\\Desktop\\FileManager\\";	// upper address
+	String databaseRoot = desktopRoot + "db\\";	// file storage
+	String chooserRoot = "C:\\Users\\Administrator\\Desktop\\data";	// start your file dialog
+	String downloadRoot = desktopRoot + "download\\";	// file download address
+	String photoViewer = "mspaint.exe";	// paint program (execution image file)
+	String documentViewer = "notepad.exe";	// text program (excution txt file)
+	String hwpViewer = "C:\\Program Files (x86)\\HNC\\HOffice9\\Bin\\Hwp.exe";	// hangul program excution
+	String musicPlayer = desktopRoot + "wmplayer.exe";	// windows media player (execution music file)
+	static String thumbnailRoot = desktopRoot + "thumbnail\\thumb_"; // Add filename header at the end (in this source "thumb_")	
+																	 // Thumbnails are needed to reduce image loading time
+	/*****************************************************************************************************/
+	
 	String pattern = "";
 
 	public static void main(String[] args) {
